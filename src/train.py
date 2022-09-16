@@ -8,10 +8,17 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve
-from src.utils import parser
+import url_parser
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 import itertools
+from sklearn.metrics import mean_squared_error,confusion_matrix, precision_score, recall_score, auc,roc_curve
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report,confusion_matrix,accuracy_score
+import xgboost as xgb
+from lightgbm import LGBMClassifier
+from xgboost import XGBClassifier
+from sklearn import metrics
 
 
 def plot_confusion_matrix(cm, classes,
@@ -62,14 +69,14 @@ run = Run.get_context()
 # Get the training dataset
 print("Loading Data...")
 malicious_url_df = run.input_datasets['training_data'].to_pandas_dataframe()[['url', 'type']]
-malicious_url_df['use_of_ip'] = malicious_url_df['url'].apply(lambda i: parser.having_ip_address(i))
-malicious_url_df['abnormal_url'] = malicious_url_df['url'].apply(lambda i: parser.abnormal_url(i))
+malicious_url_df['use_of_ip'] = malicious_url_df['url'].apply(lambda i: url_parser.having_ip_address(i))
+malicious_url_df['abnormal_url'] = malicious_url_df['url'].apply(lambda i: url_parser.abnormal_url(i))
 malicious_url_df['count.'] = malicious_url_df['url'].apply(lambda i: i.count('.'))
 malicious_url_df['count-www'] = malicious_url_df['url'].apply(lambda i: i.count('www'))
 malicious_url_df['count@'] = malicious_url_df['url'].apply(lambda i: i.count('@'))
-malicious_url_df['count_dir'] = malicious_url_df['url'].apply(lambda i: parser.no_of_dir(i))
-malicious_url_df['count_embed_domian'] = malicious_url_df['url'].apply(lambda i: parser.no_of_embed(i))
-malicious_url_df['short_url'] = malicious_url_df['url'].apply(lambda i: parser.shortening_service(i))
+malicious_url_df['count_dir'] = malicious_url_df['url'].apply(lambda i: url_parser.no_of_dir(i))
+malicious_url_df['count_embed_domian'] = malicious_url_df['url'].apply(lambda i: url_parser.no_of_embed(i))
+malicious_url_df['short_url'] = malicious_url_df['url'].apply(lambda i: url_parser.shortening_service(i))
 malicious_url_df['count-https'] = malicious_url_df['url'].apply(lambda i : i.count('https'))
 malicious_url_df['count-http'] = malicious_url_df['url'].apply(lambda i : i.count('http'))
 malicious_url_df['count%'] = malicious_url_df['url'].apply(lambda i: i.count('%'))
@@ -77,21 +84,21 @@ malicious_url_df['count?'] = malicious_url_df['url'].apply(lambda i: i.count('?'
 malicious_url_df['count-'] = malicious_url_df['url'].apply(lambda i: i.count('-'))
 malicious_url_df['count='] = malicious_url_df['url'].apply(lambda i: i.count('='))
 malicious_url_df['url_length'] = malicious_url_df['url'].apply(lambda i: len(str(i)))
-malicious_url_df['hostname_length'] = malicious_url_df['url'].apply(lambda i: len(parser.urlparse(i).netloc))
-malicious_url_df['sus_url'] = malicious_url_df['url'].apply(lambda i: parser.suspicious_words(i))
-malicious_url_df['fd_length'] = malicious_url_df['url'].apply(lambda i: parser.fd_length(i))
-malicious_url_df['tld'] = malicious_url_df['url'].apply(lambda i: parser.get_tld(i,fail_silently=True)
-malicious_url_df['tld_length'] = malicious_url_df['tld'].apply(lambda i: parser.tld_length(i))
-malicious_url_df['count-digits']= malicious_url_df['url'].apply(lambda i: parser.digit_count(i))
-malicious_url_df['count-letters']= malicious_url_df['url'].apply(lambda i: parser.letter_count(i))
+malicious_url_df['hostname_length'] = malicious_url_df['url'].apply(lambda i: len(url_parser.urlparse(i).netloc))
+malicious_url_df['sus_url'] = malicious_url_df['url'].apply(lambda i: url_parser.suspicious_words(i))
+malicious_url_df['fd_length'] = malicious_url_df['url'].apply(lambda i: url_parser.fd_length(i))
+malicious_url_df['tld'] = malicious_url_df['url'].apply(lambda i: url_parser.get_tld(i,fail_silently=True))
+malicious_url_df['tld_length'] = malicious_url_df['tld'].apply(lambda i: url_parser.tld_length(i))
+malicious_url_df['count-digits']= malicious_url_df['url'].apply(lambda i: url_parser.digit_count(i))
+malicious_url_df['count-letters']= malicious_url_df['url'].apply(lambda i: url_parser.letter_count(i))
 malicious_url_df = malicious_url_df.drop("tld",1)
 
 lb_make = LabelEncoder()
 malicious_url_df["type_code"] = lb_make.fit_transform(
-    df["type"]
+    malicious_url_df["type"]
 )
 
-X = df[['use_of_ip','abnormal_url', 'count.', 'count-www', 'count@',
+X = malicious_url_df[['use_of_ip','abnormal_url', 'count.', 'count-www', 'count@',
        'count_dir', 'count_embed_domian', 'short_url', 'count-https',
        'count-http', 'count%', 'count?', 'count-', 'count=', 'url_length',
        'hostname_length', 'sus_url', 'fd_length', 'tld_length', 'count-digits',
