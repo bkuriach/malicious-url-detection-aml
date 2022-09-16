@@ -93,10 +93,13 @@ malicious_url_df['count-digits']= malicious_url_df['url'].apply(lambda i: url_pa
 malicious_url_df['count-letters']= malicious_url_df['url'].apply(lambda i: url_parser.letter_count(i))
 malicious_url_df = malicious_url_df.drop("tld",1)
 
+print("malicious_url_df type_code",malicious_url_df["type"].value_counts())
 lb_make = LabelEncoder()
 malicious_url_df["type_code"] = lb_make.fit_transform(
     malicious_url_df["type"]
 )
+malicious_url_df = malicious_url_df[malicious_url_df["type_code"].isin([2,3,4])]
+print("malicious_url_df type_code",malicious_url_df["type_code"].value_counts())
 
 X = malicious_url_df[['use_of_ip','abnormal_url', 'count.', 'count-www', 'count@',
        'count_dir', 'count_embed_domian', 'short_url', 'count-https',
