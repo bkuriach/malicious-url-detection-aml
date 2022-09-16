@@ -129,3 +129,8 @@ print(classification_report(y_test,y_pred))
 
 score = metrics.accuracy_score(y_test, y_pred)
 print("accuracy:   %0.3f" % score)
+
+cm = metrics.confusion_matrix(y_test, y_pred, labels=[0,1,2,3])
+run.log('Confusion Matrix', cm)
+plot_confusion_matrix(cm,classes=['benign', 'defacement','phishing','malware'])
+# run.log_image("Confusion Matrix Image",plot_confusion_matrix(cm,classes=['benign', 'defacement','phishing','malware']))
